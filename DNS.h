@@ -8,6 +8,7 @@
 #include<iterator> 
 #include<regex> 
 #include<iostream>
+#include<fstream>
 
 using namespace std;
 
@@ -36,6 +37,19 @@ bool ipCompare(ipaddress ip1, ipaddress ip2)
         if( ip1.value[i] != ip2.value[0] ) return false;
     }
     return true;
+}
+
+vector <string> split(string s, string delimiter){
+    vector <string> res;
+    size_t pos = 0;
+    string token;
+    while ((pos = s.find(delimiter)) != string::npos) {
+        token = s.substr(0, pos);
+        res.push_back(token);
+        s.erase(0, pos + delimiter.length());
+    }
+    res.push_back(s);
+    return res;
 }
 
 //Helper function to print ipaddress datatypes
@@ -321,5 +335,155 @@ class DNS
         }
         printf("Domain already registered\n");
         return;
+    }
+
+    void import_data(string source_dir)
+    {
+        ifstream infile(source_dir);
+        string ip, domain;
+
+        //format: 0.0.0.0 !.domain.!.com
+        while (infile >> ip >> domain)
+        {
+            //fetch IP Address
+            ipaddress newIp;
+            vector <string> splitIp = split(ip, ".");
+            for( int i = 0 ; i < 4 ; i++ ) newIp.value[i] = stoi(splitIp[i]);
+
+            //fetch Domain Name
+            string domPart[4];
+            vector <string> splitDom = split(domain, ".");
+            for( int i = 0 ; i < 4 ; i++ ) domPart[i] = splitDom[i];
+            domPart[0] = domPart[0] == "!" ? "." : domPart[0]; //sub
+            domPart[2] = domPart[2] == "!" ? "" : domPart[2]; //sld
+            DomainName newDomain = DomainName(domPart[0],domPart[1],domPart[2],domPart[3]);
+
+            this->bindNewDomain(newDomain,newIp);
+        }
+        infile.close();
+        cout << "DNS Data Imported" << endl;
+    }
+
+    void export_data(string target_dir)
+    {
+        ofstream savefile;
+        savefile.open(target_dir);
+        map <string, shared_ptr<TLDServer>> a_tld = this->rootserv->getAllRegisteredTLD();
+        
+        //explore all TLD
+        for (auto const& x : a_tld)
+        {
+            map <string, shared_ptr<SLDServer>> a_sld = x.second->getAllRegisteredSLD();
+
+            //explore all SLD 
+            for (auto const& y : a_sld)
+            {
+                map <string, shared_ptr<NameServer>> a_ns = y.second->getAllRegisteredNameServer();
+
+                //explore current SLD NS
+                for (auto const& z : a_ns)
+                {
+                    map <string, ipaddress> a_ip = z.second->getAllRegisteredIp();
+
+                    //get all IP below SLD
+                    for (auto const& ab : a_ip){
+                        //write ip
+                        string s_ip = "";
+                        for( int i = 0 ; i < 3 ; i++ ) s_ip += to_string(ab.second.value[i])+".";
+                        s_ip += to_string(ab.second.value[3]);
+
+                        //write domain
+                        string sub = ab.first == "." ? "!" : ab.first;
+                        string s_dom = sub + "." + z.first + "." + y.first + "." + x.first;
+                        savefile << s_ip+" "+s_dom << endl;
+                    }
+                }
+            }
+
+            //explore current TLD NS
+            map <string, shared_ptr<NameServer>> a_ns = x.second->getAllRegisteredNameServer();
+            for (auto const& y : a_ns)
+            {
+                map <string, ipaddress> a_ip = y.second->getAllRegisteredIp();
+
+                //get all IP below TLD
+                for (auto const& z : a_ip){
+                    //write ip
+                    string s_ip = "";
+                    for( int i = 0 ; i < 3 ; i++ ) s_ip += to_string(z.second.value[i])+".";
+                    s_ip += to_string(z.second.value[3]);
+
+                    //write domain
+                    string sub = z.first == "." ? "!" : z.first;
+                    string s_dom = sub + "." + y.first + ".!." + x.first;
+                    savefile << s_ip+" "+s_dom << endl;
+                }
+            }
+        }
+        savefile.close();
+        cout << "DNS Data Saved" << endl;
+    }
+
+    void printAllTreeRecord()
+    {
+        cout << "==============" << endl;
+        cout << "| All Record |" << endl;
+        cout << "==============" << endl;
+        map <string, shared_ptr<TLDServer>> a_tld = this->rootserv->getAllRegisteredTLD();
+        
+        //explore all TLD
+        for (auto const& x : a_tld)
+        {
+            cout << x.first << endl; //print TLD
+            map <string, shared_ptr<SLDServer>> a_sld = x.second->getAllRegisteredSLD();
+
+            //explore current TLD NS
+            cout << "|-." << endl;
+            map <string, shared_ptr<NameServer>> a_ns = x.second->getAllRegisteredNameServer();
+            for (auto const& y : a_ns)
+            {
+                cout << "  |-" << y.first << endl; //print TLD root
+                map <string, ipaddress> a_ip = y.second->getAllRegisteredIp();
+
+                //get all IP below TLD
+                for (auto const& z : a_ip){
+                    //write ip
+                    string s_ip = "";
+                    for( int i = 0 ; i < 3 ; i++ ) s_ip += to_string(z.second.value[i])+".";
+                    s_ip += to_string(z.second.value[3]);
+
+                    cout << "    |-" << z.first << ":" << s_ip << endl; //print sub
+                }
+            }
+
+            //explore all SLD 
+            for (auto const& y : a_sld)
+            {
+                cout << "|-" << y.first << endl; //print SLD
+                map <string, shared_ptr<NameServer>> a_ns = y.second->getAllRegisteredNameServer();
+
+                //explore current SLD NS
+                for (auto const& z : a_ns)
+                {
+                    cout << "  |-" << z.first << endl; //print SLD root
+                    map <string, ipaddress> a_ip = z.second->getAllRegisteredIp();
+
+                    //get all IP below SLD
+                    for (auto const& ab : a_ip){
+                        //write ip
+                        string s_ip = "";
+                        for( int i = 0 ; i < 3 ; i++ ) s_ip += to_string(ab.second.value[i])+".";
+                        s_ip += to_string(ab.second.value[3]);
+
+                        //write domain
+                        string sub = ab.first == "." ? "" : (ab.first+".");
+
+                        
+                        cout << "    |-" << ab.first << ":" << s_ip << endl; //print sub
+                    }
+                }
+            }
+
+        }
     }
 };

@@ -1,12 +1,19 @@
 #include "DNS.h"
+#include<conio.h>
 
 void printMenu(){
     printf("DNS Server Simulator\n");
     printf("====================\n");
     printf("|1. Resolve Name   |\n");
     printf("|2. Register IP    |\n");
-    printf("|3. Exit           |\n");
+    printf("|3. Print All      |\n");
+    printf("|4. Exit           |\n");
     printf("====================\n");
+}
+
+void anyToContinue(){
+    cout << "Enter any to continue.." << endl;
+    getch();
 }
 
 int main()
@@ -20,6 +27,7 @@ int main()
 
     // make DNS
     DNS *myDns = new DNS(rootserv1);
+    ipaddress result;
 
     // example manual DNS server binding
     /* 
@@ -35,24 +43,25 @@ int main()
     DomainName sunib = DomainName(".","binus","ac","id");
 
     myDns->bindNewDomain(sunib,{192,168,0,1});
-    ipaddress result = myDns->resolve(sunib, false);
+    // myDns->bindNewDomain(DomainName("binusmaya","binus","ac","id"),{192,168,0,2});
+    // myDns->bindNewDomain(DomainName("centre","binus","ac","id"),{192,168,0,3});
+    // myDns->bindNewDomain(DomainName(".","facebook","","com"),{192,168,0,4});
+    // myDns->bindNewDomain(DomainName("api","facebook","","com"),{192,168,0,5});
+    // myDns->bindNewDomain(DomainName(".","google","","id"),{192,168,0,6});
+    result = myDns->resolve(sunib, false);
+    // myDns->import_data("wkwk.txt");
 
     // Interface
-    /*
-    *   Maybe upcoming feature:
-    *   - Directory exploration
-    *   - Unbind IP
-    *   - Delete certain server until its children
-    */
     int choice  = -1;
     while( choice == -1 ){
-        while ( choice < 1 || choice > 3)
+        while ( choice < 1 || choice > 4)
         {
+            system("cls");
             printMenu();
             cout << "Choose Menu: ";
             cin >> choice;
         }
-        if( choice == 3 )return 0;
+        if( choice == 4 )return 0;
 
         else if( choice == 1 ){
             //resolve
@@ -83,6 +92,12 @@ int main()
             myDns->bindNewDomain(newDomain,newIp);
         }
 
+        else if( choice == 3 ){
+            //print all
+            myDns->printAllTreeRecord();
+        }
+
+        anyToContinue();
         choice = -1;
     }
 

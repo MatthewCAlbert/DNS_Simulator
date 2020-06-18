@@ -1,16 +1,20 @@
-# DNS Simulator
+# Simple DNS Simulator
 <p>Data Structure Final Project Backup Plan hehe :)</p>
 > Simulating DNS Resolver
+<br>
+> DNS will simply resolve <b style="color:skyblue;">domain name</b> into <b style="color:skyblue;">IP address</b> (not DNS Zone)
+<p style="color:orange;"><b>! UI only compatible with Windows based machine. !</b></p>
 
 ## Features
 - Name Server, Second Level Domain Server, Top Level Domain Server, Root Server/DNS.
-- IP & Domain Binding + Register
-- Basic Interface
+- IP & Domain Binding + Register.
+- Tree Print.
+- Import and Export DNS to file.
+- Basic Interface.
 
 ## UI Upcoming Feature
-- Directory exploration
 - Unbind IP
 - Delete certain server until its children
 
 ## Core DNS Upcoming Feature
-- Import and Save DNS
+- None
