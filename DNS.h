@@ -126,6 +126,21 @@ class NameServer
         resolver.insert({key, ip});
     }
 
+    void replaceIP(string key, ipaddress ip)
+    {
+        for (auto const& x : resolver)
+        {
+            if(  iequals(x.first, key)  ){
+                resolver[key] = ip;
+                return;
+            }
+        }
+    }
+
+    void deleteIP(string key){
+        resolver.erase(key);
+    }
+
     map <string, ipaddress> getAllRegisteredIp()
     {
         return resolver;
@@ -293,7 +308,7 @@ class DNS
         return res;
     }
 
-    void bindNewDomain( DomainName domain, ipaddress ip)
+    void bindNewDomain( DomainName domain, ipaddress ip, bool overwrite = false)
     {
         if( domain.name == "*" || domain.subdomain == "*" || domain.sld == "*" || domain.tld == "*" ){printf("Cannot bind asterisk!\n");return;}
         shared_ptr<TLDServer> target_tld = this->rootserv->resolve(domain);
@@ -332,12 +347,40 @@ class DNS
             //bind IP
             target_ns->bindIP(domain.subdomain,ip);
             return;
+        }else if( overwrite ){
+            target_ns->replaceIP(domain.subdomain, ip);
         }
         printf("Domain already registered\n");
         return;
     }
 
-    void import_data(string source_dir)
+    void deleteDomain( DomainName domain)
+    {
+        if( domain.name == "*" || domain.subdomain == "*" || domain.sld == "*" || domain.tld == "*" ){printf("Cannot bind asterisk!\n");return;}
+        shared_ptr<TLDServer> target_tld = this->rootserv->resolve(domain);
+        shared_ptr<SLDServer> target_sld;
+        shared_ptr<NameServer> target_ns;
+        if( target_tld == NULL ) return;
+
+        if( domain.sld != "" ){
+            //if have SLD
+            target_sld = target_tld->resolveSLD(domain);
+            if( target_sld == NULL ) return;
+        }else{
+            target_ns = target_tld->resolve(domain);
+        }
+
+        if( target_ns == NULL ) return;
+
+        if( ipCompare(target_ns->resolve(domain),{0,0,0,0}) ) return;
+        
+        //found delete it
+        target_ns->deleteIP(domain.subdomain);
+
+        return;
+    }
+
+    void import_data(string source_dir, bool overwrite = true)
     {
         ifstream infile(source_dir);
         string ip, domain;
@@ -358,7 +401,7 @@ class DNS
             domPart[2] = domPart[2] == "!" ? "" : domPart[2]; //sld
             DomainName newDomain = DomainName(domPart[0],domPart[1],domPart[2],domPart[3]);
 
-            this->bindNewDomain(newDomain,newIp);
+            this->bindNewDomain(newDomain,newIp,overwrite);
         }
         infile.close();
         cout << "DNS Data Imported" << endl;

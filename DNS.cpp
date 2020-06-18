@@ -7,7 +7,8 @@ void printMenu(){
     printf("|1. Resolve Name   |\n");
     printf("|2. Register IP    |\n");
     printf("|3. Print All      |\n");
-    printf("|4. Exit           |\n");
+    printf("|4. Delete Domain  |\n");
+    printf("|5. Exit           |\n");
     printf("====================\n");
 }
 
@@ -54,14 +55,14 @@ int main()
     // Interface
     int choice  = -1;
     while( choice == -1 ){
-        while ( choice < 1 || choice > 4)
+        while ( choice < 1 || choice > 5)
         {
             system("cls");
             printMenu();
             cout << "Choose Menu: ";
             cin >> choice;
         }
-        if( choice == 4 )return 0;
+        if( choice == 5 )return 0;
 
         else if( choice == 1 ){
             //resolve
@@ -95,6 +96,18 @@ int main()
         else if( choice == 3 ){
             //print all
             myDns->printAllTreeRecord();
+        }
+
+        else if( choice == 4 ){
+            //delete domain
+            string sub = "", name = "", sld = "", tld = "";
+            cout << "Note: No SLD input '.', No subdomain input '.'!" << endl;
+            cout << "Enter domain name (format: sub name sld tld): " << endl;
+            cin >> sub >> name >> sld >> tld;
+            if( sld == "." )sld = "";
+
+            DomainName target = DomainName(sub,name,sld,tld);
+            myDns->deleteDomain(target);
         }
 
         anyToContinue();
