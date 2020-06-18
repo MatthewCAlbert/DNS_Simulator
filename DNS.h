@@ -75,7 +75,7 @@ class DomainName
         this->name = name;
 
         //must be alphabet except *
-        regex_pass = !( !regex_match(sld, regex("^[a-zA-Z0-9_]*$")) || !regex_match(tld, regex("^[a-zA-Z0-9_]*$")) );
+        regex_pass = !( !regex_match(sld, regex("^[a-zA-Z]*$")) || !regex_match(tld, regex("^[a-zA-Z]*$")) );
         this->sld = sld;
         this->tld = tld;
         if( !regex_pass ){printf("Invalid regex error!\n");}
