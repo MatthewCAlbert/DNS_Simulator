@@ -120,6 +120,11 @@ class NameServer
         }
         return {0,0,0,0};
     }
+    
+    int recordCount()
+    {
+        return resolver.size();
+    }
 
     void bindIP(string key, ipaddress ip)
     {
@@ -163,6 +168,11 @@ class SLDServer
         }
         return NULL;
     }
+    
+    int recordCount()
+    {
+        return resolver.size();
+    }
 
     void bindNameServer(string key, shared_ptr<NameServer> nserv)
     {
@@ -173,6 +183,11 @@ class SLDServer
     {
         shared_ptr<NameServer> nserv = make_shared<NameServer>();
         resolver.insert({key, nserv});
+    }
+
+    void deleteNameServer(string key)
+    {
+        resolver.erase(key);
     }
 
     map <string, shared_ptr<NameServer>> getAllRegisteredNameServer()
@@ -209,6 +224,16 @@ class TLDServer
         }
         return NULL;
     }
+    
+    int recordCount()
+    {
+        return resolver.size();
+    }
+    
+    int SldCount()
+    {
+        return second.size();
+    }
 
     void bindNameServer(string key, shared_ptr<NameServer> nserv)
     {
@@ -225,6 +250,16 @@ class TLDServer
     {
         shared_ptr<SLDServer> nserv = make_shared<SLDServer>();
         second.insert({key, nserv});
+    }
+
+    void deleteSLDServer(string key)
+    {
+        second.erase(key);
+    }
+
+    void deleteNameServer(string key)
+    {
+        resolver.erase(key);
     }
 
     map <string, shared_ptr<NameServer>> getAllRegisteredNameServer()
@@ -254,6 +289,11 @@ class RootServer
         }
         return NULL;
     }
+    
+    int recordCount()
+    {
+        return resolver.size();
+    }
 
     void bindTLDServer(string key, shared_ptr<TLDServer> tldserv)
     {
@@ -264,6 +304,10 @@ class RootServer
     {
         shared_ptr<TLDServer> tldserv = make_shared<TLDServer>();
         resolver.insert({key, tldserv});
+    }
+
+    void deleteTLDServer(string key){
+        resolver.erase(key);
     }
 
     map <string, shared_ptr<TLDServer>> getAllRegisteredTLD()
@@ -374,8 +418,31 @@ class DNS
 
         if( ipCompare(target_ns->resolve(domain),{0,0,0,0}) ) return;
         
-        //found delete it
+        //found unbind IP from NS
         target_ns->deleteIP(domain.subdomain);
+
+        //delete NS if empty
+        if( target_ns->recordCount() == 0 ){
+            if( domain.sld != "" ){
+                //have sld
+                target_sld->deleteNameServer(domain.name);
+            }else{
+                //no sld
+                target_tld->deleteNameServer(domain.name);
+            }
+        }
+
+        //delete SLD if empty & exist
+        if( domain.sld != ""){
+            if( target_sld->recordCount() == 0 ){
+                target_tld->deleteSLDServer(domain.sld);
+            }
+        }
+
+        //delete TLD if SLD and NS empty
+        if( target_tld->recordCount() == 0 && target_tld->SldCount() == 0 ){
+            this->rootserv->deleteTLDServer(domain.tld);
+        }
 
         return;
     }

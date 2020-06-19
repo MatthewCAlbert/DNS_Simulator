@@ -12,6 +12,12 @@ void printMenu(){
     printf("====================\n");
 }
 
+void printDomainInstruction(){
+    cout << "Note: No SLD input '.', No subdomain input '.'!" << endl;
+    cout << "To cancel fill (n n n n) all lowercase." << endl;
+    cout << "Enter domain name (format: sub name sld tld): " << endl;
+}
+
 void anyToContinue(){
     cout << "Enter any to continue.." << endl;
     getch();
@@ -67,9 +73,9 @@ int main()
         else if( choice == 1 ){
             //resolve
             string sub = "", name = "", sld = "", tld = "";
-            cout << "Note: No SLD input '.', No subdomain input '.'!" << endl;
-            cout << "Enter domain name (format: sub name sld tld): " << endl;
+            printDomainInstruction();
             cin >> sub >> name >> sld >> tld;
+            if( sub == name && sld == tld && tld == "n" ){choice=-1;continue;}
             if( sld == "." )sld = "";
             DomainName target = DomainName(sub,name,sld,tld);
             result = myDns->resolve(target, true);
@@ -79,9 +85,9 @@ int main()
         else if( choice == 2 ){
             //register
             string sub = "", name = "", sld = "", tld = "";
-            cout << "Note: No SLD input '.', No subdomain input '.'!" << endl;
-            cout << "Enter domain name (format: sub name sld tld): " << endl;
+            printDomainInstruction();
             cin >> sub >> name >> sld >> tld;
+            if( sub == name && sld == tld && tld == "n" ){choice=-1;continue;}
             if( sld == "." )sld = "";
 
             DomainName newDomain = DomainName(sub,name,sld,tld);
@@ -89,7 +95,9 @@ int main()
 
             cout << "Note: Only enter 8bit int value!" << endl;
             cout << "Enter IP address (example: 192 168 0 1): " << endl;
-            cin >> newIp.value[0] >> newIp.value[1] >> newIp.value[2] >> newIp.value[3];
+            string IPin[4];
+            cin >> IPin[0] >> IPin[1] >> IPin[2] >> IPin[3];
+            for( int i = 0 ; i < 4 ; i++ ) newIp.value[i] = stoi(IPin[i]);
             myDns->bindNewDomain(newDomain,newIp);
         }
 
@@ -101,9 +109,9 @@ int main()
         else if( choice == 4 ){
             //delete domain
             string sub = "", name = "", sld = "", tld = "";
-            cout << "Note: No SLD input '.', No subdomain input '.'!" << endl;
-            cout << "Enter domain name (format: sub name sld tld): " << endl;
+            printDomainInstruction();
             cin >> sub >> name >> sld >> tld;
+            if( sub == name && sld == tld && tld == "n" ){choice=-1;continue;}
             if( sld == "." )sld = "";
 
             DomainName target = DomainName(sub,name,sld,tld);
