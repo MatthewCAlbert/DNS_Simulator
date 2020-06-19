@@ -8,13 +8,13 @@
 ## Features
 - Name Server, Second Level Domain Server, Top Level Domain Server, Root Server/DNS.
 - IP & Domain Binding + Register.
-- Delete IP from nameserver using Domain Name.
+- Delete IP from nameserver using Domain Name + clear child if empty.
 - Tree Print.
 - Import and Export DNS to file.
 - Basic Interface.
 
 ## UI Upcoming Feature
-= None
+- None
 
 ## Core DNS Upcoming Feature
 - None
